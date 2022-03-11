@@ -1,0 +1,28 @@
+# datasets/
+# ckpts/
+# en_vectors_web_lg-2.1.0.tar.gz
+# results/
+# tensorboardx/
+# old_log/
+# logs/
+# README.md
+# misc/
+# LICENSE
+# requirements.txt
+# setup.sh
+checkpoints/
+coco_log/
+data/
+demo/
+docker/
+docs/
+docs_zh-CN/
+old_voc_log/
+resources/
+submit/
+tests/
+work/
+zzz/
+aa.pdf
+coco_log1
+code.tar.gz
