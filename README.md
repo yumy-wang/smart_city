@@ -1,180 +1,573 @@
-<div align="center">
-  <img src="resources/mmdet-logo.png" width="600"/>
-</div>
+# A03智能冰箱食材精准识别
 
-[![PyPI](https://img.shields.io/pypi/v/mmdet)](https://pypi.org/project/mmdet)
-[![docs](https://img.shields.io/badge/docs-latest-blue)](https://mmdetection.readthedocs.io/en/latest/)
-[![badge](https://github.com/open-mmlab/mmdetection/workflows/build/badge.svg)](https://github.com/open-mmlab/mmdetection/actions)
-[![codecov](https://codecov.io/gh/open-mmlab/mmdetection/branch/master/graph/badge.svg)](https://codecov.io/gh/open-mmlab/mmdetection)
-[![license](https://img.shields.io/github/license/open-mmlab/mmdetection.svg)](https://github.com/open-mmlab/mmdetection/blob/master/LICENSE)
-[![open issues](https://isitmaintained.com/badge/open/open-mmlab/mmdetection.svg)](https://github.com/open-mmlab/mmdetection/issues)
+## 比赛说明：
 
-Documentation: https://mmdetection.readthedocs.io/
+- 背景：“冰箱食材精准识别”赛题是冰箱场景食材检测问题，即给定若干冰箱场景下的图片，食材检测算法需要在图像中定位到人手中的食材并识别出类别。
+- 作品要求：参赛团队应聚焦智能冰箱场景食材定位识别，要求选手在给定的训练数据集上开发出高效可靠的计算机视觉算法，实现食材的定位识别，要求模型尽可能快而准的给出食材的`位置`和`类别`。【目标检测问题】
 
-## Introduction
+- 评价指标：mAP（mean Average Precision）
+- 初赛数据集：
+	- 训练集：60类，3w张1280x720像素
+		- 每个类文件夹下，图片+其对应txt包含类别id和bbox
+	- 测试集：6k张1280x720像素
+- 决赛数据集：
+	- 训练集：150类，10w张1280x720像素
+	- 测试集：2w张
 
-English | [简体中文](README_zh-CN.md)
+## 数据处理
 
-MMDetection is an open source object detection toolbox based on PyTorch. It is
-a part of the [OpenMMLab](https://openmmlab.com/) project.
+比赛给的数据格式是yolo格式，而mmdet支持的是coco格式，因此需要先进行数据转换
 
-The master branch works with **PyTorch 1.3+**.
-The old v1.x branch works with PyTorch 1.1 to 1.4, but v2.0 is strongly recommended for faster speed, higher performance, better design and more friendly usage.
+### step1：将数据转换成标准yolo格式
 
-![demo image](resources/coco_test_12510.jpg)
+代码：code/data_preprocess.ipynb
 
-### Major features
+- 标准yolo：classes.txt  images  labels三个文件/文件夹
+	- classes.txt中放入每个类的名称，一行一类
+	- images和labels中文件名一一对应，只有后缀不一样
 
-- **Modular Design**
 
-  We decompose the detection framework into different components and one can easily construct a customized object detection framework by combining different modules.
 
-- **Support of multiple frameworks out of box**
+### step2：使用工具将yolo转换成coco
 
-  The toolbox directly supports popular and contemporary detection frameworks, *e.g.* Faster RCNN, Mask RCNN, RetinaNet, etc.
+代码：/mmdetection/mmdetection/data/yolo2coco.py
 
-- **High efficiency**
+执行
 
-  All basic bbox and mask operations run on GPUs. The training speed is faster than or comparable to other codebases, including [Detectron2](https://github.com/facebookresearch/detectron2), [maskrcnn-benchmark](https://github.com/facebookresearch/maskrcnn-benchmark) and [SimpleDet](https://github.com/TuSimple/simpledet).
-
-- **State of the art**
-
-  The toolbox stems from the codebase developed by the *MMDet* team, who won [COCO Detection Challenge](http://cocodataset.org/#detection-leaderboard) in 2018, and we keep pushing it forward.
-
-Apart from MMDetection, we also released a library [mmcv](https://github.com/open-mmlab/mmcv) for computer vision research, which is heavily depended on by this toolbox.
-
-## License
-
-This project is released under the [Apache 2.0 license](LICENSE).
-
-## Changelog
-
-v2.15.1 was released in 11/08/2021, which supports YOLOX.
-Please refer to [changelog.md](docs/changelog.md) for details and release history.
-A comparison between v1.x and v2.0 codebases can be found in [compatibility.md](docs/compatibility.md).
-
-## Benchmark and model zoo
-
-Results and models are available in the [model zoo](docs/model_zoo.md).
-
-Supported backbones:
-
-- [x] ResNet (CVPR'2016)
-- [x] ResNeXt (CVPR'2017)
-- [x] VGG (ICLR'2015)
-- [x] HRNet (CVPR'2019)
-- [x] RegNet (CVPR'2020)
-- [x] Res2Net (TPAMI'2020)
-- [x] ResNeSt (ArXiv'2020)
-
-Supported methods:
-
-- [x] [RPN (NeurIPS'2015)](configs/rpn)
-- [x] [Fast R-CNN (ICCV'2015)](configs/fast_rcnn)
-- [x] [Faster R-CNN (NeurIPS'2015)](configs/faster_rcnn)
-- [x] [Mask R-CNN (ICCV'2017)](configs/mask_rcnn)
-- [x] [Cascade R-CNN (CVPR'2018)](configs/cascade_rcnn)
-- [x] [Cascade Mask R-CNN (CVPR'2018)](configs/cascade_rcnn)
-- [x] [SSD (ECCV'2016)](configs/ssd)
-- [x] [RetinaNet (ICCV'2017)](configs/retinanet)
-- [x] [GHM (AAAI'2019)](configs/ghm)
-- [x] [Mask Scoring R-CNN (CVPR'2019)](configs/ms_rcnn)
-- [x] [Double-Head R-CNN (CVPR'2020)](configs/double_heads)
-- [x] [Hybrid Task Cascade (CVPR'2019)](configs/htc)
-- [x] [Libra R-CNN (CVPR'2019)](configs/libra_rcnn)
-- [x] [Guided Anchoring (CVPR'2019)](configs/guided_anchoring)
-- [x] [FCOS (ICCV'2019)](configs/fcos)
-- [x] [RepPoints (ICCV'2019)](configs/reppoints)
-- [x] [Foveabox (TIP'2020)](configs/foveabox)
-- [x] [FreeAnchor (NeurIPS'2019)](configs/free_anchor)
-- [x] [NAS-FPN (CVPR'2019)](configs/nas_fpn)
-- [x] [ATSS (CVPR'2020)](configs/atss)
-- [x] [FSAF (CVPR'2019)](configs/fsaf)
-- [x] [PAFPN (CVPR'2018)](configs/pafpn)
-- [x] [Dynamic R-CNN (ECCV'2020)](configs/dynamic_rcnn)
-- [x] [PointRend (CVPR'2020)](configs/point_rend)
-- [x] [CARAFE (ICCV'2019)](configs/carafe/README.md)
-- [x] [DCNv2 (CVPR'2019)](configs/dcn/README.md)
-- [x] [Group Normalization (ECCV'2018)](configs/gn/README.md)
-- [x] [Weight Standardization (ArXiv'2019)](configs/gn+ws/README.md)
-- [x] [OHEM (CVPR'2016)](configs/faster_rcnn/faster_rcnn_r50_fpn_ohem_1x_coco.py)
-- [x] [Soft-NMS (ICCV'2017)](configs/faster_rcnn/faster_rcnn_r50_fpn_soft_nms_1x_coco.py)
-- [x] [Generalized Attention (ICCV'2019)](configs/empirical_attention/README.md)
-- [x] [GCNet (ICCVW'2019)](configs/gcnet/README.md)
-- [x] [Mixed Precision (FP16) Training (ArXiv'2017)](configs/fp16/README.md)
-- [x] [InstaBoost (ICCV'2019)](configs/instaboost/README.md)
-- [x] [GRoIE (ICPR'2020)](configs/groie/README.md)
-- [x] [DetectoRS (ArXix'2020)](configs/detectors/README.md)
-- [x] [Generalized Focal Loss (NeurIPS'2020)](configs/gfl/README.md)
-- [x] [CornerNet (ECCV'2018)](configs/cornernet/README.md)
-- [x] [Side-Aware Boundary Localization (ECCV'2020)](configs/sabl/README.md)
-- [x] [YOLOv3 (ArXiv'2018)](configs/yolo/README.md)
-- [x] [PAA (ECCV'2020)](configs/paa/README.md)
-- [x] [YOLACT (ICCV'2019)](configs/yolact/README.md)
-- [x] [CentripetalNet (CVPR'2020)](configs/centripetalnet/README.md)
-- [x] [VFNet (ArXix'2020)](configs/vfnet/README.md)
-- [x] [DETR (ECCV'2020)](configs/detr/README.md)
-- [x] [Deformable DETR (ICLR'2021)](configs/deformable_detr/README.md)
-- [x] [CascadeRPN (NeurIPS'2019)](configs/cascade_rpn/README.md)
-- [x] [SCNet (AAAI'2021)](configs/scnet/README.md)
-- [x] [AutoAssign (ArXix'2020)](configs/autoassign/README.md)
-- [x] [YOLOF (CVPR'2021)](configs/yolof/README.md)
-- [x] [Seasaw Loss (CVPR'2021)](configs/seesaw_loss/README.md)
-- [x] [CenterNet (CVPR'2019)](configs/centernet/README.md)
-- [x] [YOLOX (ArXix'2021)](configs/yolox/README.md)
-
-Some other methods are also supported in [projects using MMDetection](./docs/projects.md).
-
-## Installation
-
-Please refer to [get_started.md](docs/get_started.md) for installation.
-
-## Getting Started
-
-Please see [get_started.md](docs/get_started.md) for the basic usage of MMDetection.
-We provide [colab tutorial](demo/MMDet_Tutorial.ipynb), and full guidance for quick run [with existing dataset](docs/1_exist_data_model.md) and [with new dataset](docs/2_new_data_model.md) for beginners.
-There are also tutorials for [finetuning models](docs/tutorials/finetune.md), [adding new dataset](docs/tutorials/customize_dataset.md), [designing data pipeline](docs/tutorials/data_pipeline.md), [customizing models](docs/tutorials/customize_models.md), [customizing runtime settings](docs/tutorials/customize_runtime.md) and [useful tools](docs/useful_tools.md).
-
-Please refer to [FAQ](docs/faq.md) for frequently asked questions.
-
-## Contributing
-
-We appreciate all contributions to improve MMDetection. Please refer to [CONTRIBUTING.md](.github/CONTRIBUTING.md) for the contributing guideline.
-
-## Acknowledgement
-
-MMDetection is an open source project that is contributed by researchers and engineers from various colleges and companies. We appreciate all the contributors who implement their methods or add new features, as well as users who give valuable feedbacks.
-We wish that the toolbox and benchmark could serve the growing research community by providing a flexible toolkit to reimplement existing methods and develop their own new detectors.
-
-## Citation
-
-If you use this toolbox or benchmark in your research, please cite this project.
-
-```
-@article{mmdetection,
-  title   = {{MMDetection}: Open MMLab Detection Toolbox and Benchmark},
-  author  = {Chen, Kai and Wang, Jiaqi and Pang, Jiangmiao and Cao, Yuhang and
-             Xiong, Yu and Li, Xiaoxiao and Sun, Shuyang and Feng, Wansen and
-             Liu, Ziwei and Xu, Jiarui and Zhang, Zheng and Cheng, Dazhi and
-             Zhu, Chenchen and Cheng, Tianheng and Zhao, Qijie and Li, Buyu and
-             Lu, Xin and Zhu, Rui and Wu, Yue and Dai, Jifeng and Wang, Jingdong
-             and Shi, Jianping and Ouyang, Wanli and Loy, Chen Change and Lin, Dahua},
-  journal= {arXiv preprint arXiv:1906.07155},
-  year={2019}
-}
+```bash
+python yolo2coco.py --root_dir /mmdetection/mmdetection/data/coco/ --random_split
 ```
 
-## Projects in OpenMMLab
+分割后：
 
-- [MMCV](https://github.com/open-mmlab/mmcv): OpenMMLab foundational library for computer vision.
-- [MIM](https://github.com/open-mmlab/mim): MIM Installs OpenMMLab Packages.
-- [MMClassification](https://github.com/open-mmlab/mmclassification): OpenMMLab image classification toolbox and benchmark.
-- [MMDetection](https://github.com/open-mmlab/mmdetection): OpenMMLab detection toolbox and benchmark.
-- [MMDetection3D](https://github.com/open-mmlab/mmdetection3d): OpenMMLab's next-generation platform for general 3D object detection.
-- [MMSegmentation](https://github.com/open-mmlab/mmsegmentation): OpenMMLab semantic segmentation toolbox and benchmark.
-- [MMAction2](https://github.com/open-mmlab/mmaction2): OpenMMLab's next-generation action understanding toolbox and benchmark.
-- [MMTracking](https://github.com/open-mmlab/mmtracking): OpenMMLab video perception toolbox and benchmark.
-- [MMPose](https://github.com/open-mmlab/mmpose): OpenMMLab pose estimation toolbox and benchmark.
-- [MMEditing](https://github.com/open-mmlab/mmediting): OpenMMLab image and video editing toolbox.
-- [MMOCR](https://github.com/open-mmlab/mmocr): A Comprehensive Toolbox for Text Detection, Recognition and Understanding.
-- [MMGeneration](https://github.com/open-mmlab/mmgeneration): OpenMMLab image and video generative models toolbox.
+![image-20210829155452369](https://yumytest.oss-cn-chengdu.aliyuncs.com/img/image-20210829155452369.png)
+
+## 环境搭建
+
+这里直接使用mmdet的docker，然后在安装一些常用工具比如ssh、jupyter
+
+cocoAPI安装
+
+```bash
+python setup.py build_ext install
+```
+
+
+
+## 修改demo模型
+
+/mmdetection/mmdetection/mmdet/datasets/coco.py下CLASSES修改成自己的类
+
+![image-20210825162405426](https://yumytest.oss-cn-chengdu.aliyuncs.com/img/image-20210825162405426.png)
+
+/mmdetection/mmdetection/mmdet/core/evaluation/class_names.py下修改coco_classes的return
+
+![image-20210825162439623](https://yumytest.oss-cn-chengdu.aliyuncs.com/img/image-20210825162439623.png)
+
+/mmdetection/mmdetection/configs/_base_/models/cascade_rcnn_r50_fpn.py下所有的num_classes修改
+
+![image-20210825162603926](https://yumytest.oss-cn-chengdu.aliyuncs.com/img/image-20210825162603926.png)
+
+因为是demo文件，所以data格式必须这样命名：
+
+![image-20210825162736455](https://yumytest.oss-cn-chengdu.aliyuncs.com/img/image-20210825162736455.png)
+
+## 训练和测试
+
+https://www.jianshu.com/p/42891e5a0422
+
+https://blog.csdn.net/weixin_41010198/article/details/106258366
+
+### train
+
+```bash
+# --work-dir为保存的权重路径，默认为work_dirs
+CUDA_VISIBLE_DEVICES=5 nohup python tools/train.py configs/cascade_rcnn/cascade_rcnn_r50_fpn_1x_coco.py --work-dir work_dir &
+```
+
+多GPU
+
+```bash
+CUDA_VISIBLE_DEVICES=0,5 nohup bash ./tools/dist_train.sh configs/cascade_rcnn/cascade_rcnn_r50_fpn_1x_coco.py 2 --work-dir work_dir/cascade_rcnn_pretrain_train_log &> train_pretrain_log &
+```
+
+
+
+### test
+
+```bash
+CUDA_VISIBLE_DEVICES=6 nohup python tools/test.py configs/cascade_rcnn/cascade_rcnn_r50_fpn_1x_coco.py work_dir/cascade_rcnn_base_train_log/latest.pth --out work_dir/result.pkl --eval bbox &> testlog1 &
+```
+
+
+
+```bash
+# 可视化GUI下
+CUDA_VISIBLE_DEVICES=6 nohup python tools/test.py configs/cascade_rcnn/cascade_rcnn_r50_fpn_1x_coco.py work_dir/latest.pth --show
+```
+
+
+
+多GPU
+
+```bash
+CUDA_VISIBLE_DEVICES=0,5 nohup bash tools/dist_test.sh configs/cascade_rcnn/cascade_rcnn_r50_fpn_1x_coco.py     work_dir/latest.pth 2 --out work_dir/base_model_result.pkl --eval mAP  &> test_testlog &
+```
+
+
+
+### test!
+
+```bash
+CUDA_VISIBLE_DEVICES=4 nohup python tools/test.py work_dir/cascade_rcnn_r50_1x_dcn/cascade_rcnn_r50_fpn_dconv_c3-c5_1x_voc.py work_dir/cascade_rcnn_r50_1x_dcn/latest.pth --format-only --eval-options "jsonfile_prefix=./cascade_rcnn_test_results"  &> work_dir/cascade_rcnn_r50_1x_dcn/out.log  &
+
+
+```
+
+
+
+## 可视化
+
+### 训练过程可视化
+
+```bash
+tensorboard --logdir=work --host=127.0.0.1 --port=8097
+```
+
+### 画loss图
+
+```bash
+python tools/analysis_tools/analyze_logs.py plot_curve work_dir/cascade_rcnn_base_train_log/20210830_133546.log.json  --keys loss --out losses.pdf
+
+python tools/analysis_tools/analyze_logs.py plot_curve work_dir/cascade_rcnn_base_train_log/20210830_133546.log.json  --keys bbox_mAP  --out bbox_mAP.pdf
+
+# 画两个图
+python tools/analysis_tools/analyze_logs.py plot_curvework_dir/cascade_rcnn_base_train_voc_log/20210901_075427.log.json work_dir/cascade_rcnn_base_r101_voc_train_log/20210902_015637.log.json work_dir/cascade_rcnn_base_train_e20_voc_log/20210902_145448.log.json work_dir/cascade_rcnn_base_r101_e20_voc_train_log/20210904_030906.log.json  work_dir/cascade_rcnn_pretrain_train_e20_voc_log/20210905_070828.log.json work_dir/cascade_rcnn_r50_1x_dcn/20210907_084612.log.json --keys mAP --legend r50 r101 r50+e20 r101+e20 e20+pre new --out mAP.pdf
+```
+
+### 查看mAP
+
+```bash
+CUDA_VISIBLE_DEVICES=6 nohup python my_voc_eval.py work_dir/cascade_rcnn_base_train_voc_log/result.pkl work_dir/cascade_rcnn_base_train_voc_log/cascade_rcnn_r50_fpn_1x_voc.py &
+```
+
+### Flops
+
+```bash
+CUDA_VISIBLE_DEVICES=1 python tools/analysis_tools/get_flops.py work_dir/cascade_rcnn_base_r101_e20_voc_train_log/cascade_rcnn_r101_fpn_20e_voc.py --shape 1280 720
+```
+
+
+
+## 具体代码
+
+### 消融实验
+
+#### r50
+
+- [x] r50==训练==
+
+```bash
+CUDA_VISIBLE_DEVICES=1,2,3,4 nohup bash ./tools/dist_train.sh configs/cascade_rcnn/cascade_rcnn_r50_fpn_1x_voc.py 4 --work-dir work_dir/cascade_rcnn_base_train_voc_log &> train_base_voc_log &
+```
+
+- [x] r50==测试==（mAP_thr要在evaluation中修改成数组[0.3, 0.5, 0.7]）
+
+```bash
+CUDA_VISIBLE_DEVICES=5 nohup python tools/test.py configs/cascade_rcnn/cascade_rcnn_r50_fpn_1x_voc.py work_dir/cascade_rcnn_base_train_voc_log/latest.pth --out work_dir/cascade_rcnn_base_train_voc_log/result_357.pkl --eval mAP &> test_base_voc_357_log &
+```
+
+#### r101
+
+- [x] r101==训练==
+
+```bash
+CUDA_VISIBLE_DEVICES=1,2,3,4 nohup bash ./tools/dist_train.sh configs/cascade_rcnn/cascade_rcnn_r101_fpn_1x_voc.py 4 --work-dir work_dir/cascade_rcnn_base_r101_voc_train_log &> train_r101_voc_log &
+```
+
+- [x] r101==测试==（mAP_thr要在evaluation中修改成数组[0.3, 0.5, 0.7]）
+
+```bash
+CUDA_VISIBLE_DEVICES=5 nohup python tools/test.py configs/cascade_rcnn/cascade_rcnn_r101_fpn_1x_voc.py work_dir/cascade_rcnn_base_r101_voc_train_log/latest.pth --out work_dir/cascade_rcnn_base_r101_voc_train_log/result_357.pkl --eval mAP &> test_base_r101_voc_357_log &
+```
+
+#### r50+e20
+
+- [x] r50+e20==训练==
+
+```bash
+CUDA_VISIBLE_DEVICES=1,2,3,4 nohup bash ./tools/dist_train.sh configs/cascade_rcnn/cascade_rcnn_r50_fpn_20e_voc.py 4 --work-dir work_dir/cascade_rcnn_base_train_e20_voc_log &> train_base_e20_voc_log &
+```
+
+- [x] r50+e20==测试==
+
+```bash
+CUDA_VISIBLE_DEVICES=5 nohup python tools/test.py configs/cascade_rcnn/cascade_rcnn_r50_fpn_20e_voc.py work_dir/cascade_rcnn_base_train_e20_voc_log/latest.pth --out work_dir/cascade_rcnn_base_train_e20_voc_log/result_357.pkl --eval mAP &> test_base_e20_voc_357_log &
+```
+
+#### r101+e20
+
+- [x] r101+e20==训练==
+
+```bash
+CUDA_VISIBLE_DEVICES=1,5,3,4 nohup bash ./tools/dist_train.sh configs/cascade_rcnn/cascade_rcnn_r101_fpn_20e_voc.py 4 --work-dir work_dir/cascade_rcnn_base_r101_e20_voc_train_log &> train_base_r101_e20_voc_log &
+```
+
+- [x] r101+e20==测试==
+
+```bash
+CUDA_VISIBLE_DEVICES=1 nohup python tools/test.py configs/cascade_rcnn/cascade_rcnn_r101_fpn_20e_voc.py work_dir/cascade_rcnn_base_r101_e20_voc_train_log/latest.pth --out work_dir/cascade_rcnn_base_r101_e20_voc_train_log/result_357.pkl --eval mAP &> test_base_r101_e20_voc_357_log &
+```
+
+#### x101+32x4d+1x
+
+- [x] x101 32x4d+1x==训练==
+
+```bash
+CUDA_VISIBLE_DEVICES=1,5,3,4 nohup bash ./tools/dist_train.sh configs/cascade_rcnn/cascade_rcnn_x101_32x4d_fpn_1x_voc.py 4 --work-dir work_dir/cascade_rcnn_x101_32x4d_fpn_1x_voc_train_log &> train_cascade_rcnn_x101_32x4d_fpn_1x_voc_log &
+```
+
+- [x] x101 32x4d+1x==测试==
+
+```bash
+CUDA_VISIBLE_DEVICES=1 nohup python tools/test.py configs/cascade_rcnn/cascade_rcnn_x101_32x4d_fpn_1x_voc.py work_dir/cascade_rcnn_x101_32x4d_fpn_1x_voc_train_log/latest.pth --out work_dir/cascade_rcnn_x101_32x4d_fpn_1x_voc_train_log/result_357.pkl --eval mAP &> test_cascade_rcnn_x101_32x4d_fpn_1x_voc_357_log &
+```
+
+#### x101+64x4d+1x【终止】
+
+
+- [ ] x101 64x4d+1x==训练==
+
+```bash
+CUDA_VISIBLE_DEVICES=0,6,7 nohup bash ./tools/dist_train.sh configs/cascade_rcnn/cascade_rcnn_x101_64x4d_fpn_1x_voc.py 3 --work-dir work_dir/cascade_rcnn_x101_64x4d_fpn_1x_voc_train_log &> train_cascade_rcnn_x101_64x4d_fpn_1x_voc_log &
+```
+
+- [ ] x101 64x4d+1x==测试==
+
+```bash
+CUDA_VISIBLE_DEVICES=1 nohup python tools/test.py configs/cascade_rcnn/cascade_rcnn_x101_64x4d_fpn_1x_voc.py work_dir/cascade_rcnn_x101_64x4d_fpn_1x_voc_train_log/latest.pth --out work_dir/cascade_rcnn_x101_64x4d_fpn_1x_voc_train_log/result_357.pkl --eval mAP &> test_cascade_rcnn_x101_64x4d_fpn_1x_voc_357_log &
+```
+
+
+
+
+
+### 预训练r50_20e
+
+- [ ] 预训练训练（标记预训练模型load_from）
+
+```bash
+CUDA_VISIBLE_DEVICES=1,2,3,4 nohup bash ./tools/dist_train.sh configs/cascade_rcnn/cascade_rcnn_r50_fpn_20e_voc.py 4 --work-dir work_dir/cascade_rcnn_pretrain_train_e20_voc_log &> train_pretrain_e20_voc_log &
+```
+
+- [ ] 预训练测试
+
+```bash
+CUDA_VISIBLE_DEVICES=5 nohup python tools/test.py configs/cascade_rcnn/cascade_rcnn_r50_fpn_20e_voc.py work_dir/cascade_rcnn_pretrain_train_e20_voc_log/latest.pth --out work_dir/cascade_rcnn_pretrain_train_e20_voc_log/result_357.pkl --eval mAP &> test_pretrain_e20_voc_357_log &
+```
+
+## 测试代码
+
+
+
+```bash
+# 测试coco数据集是否输出结果
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 bash tools/dist_test.sh abandon_work_dir/coco_work_dir/cascade_rcnn_base_train_log/cascade_rcnn_r50_fpn_1x_coco.py abandon_work_dir/coco_work_dir/cascade_rcnn_base_train_log/latest.pth 8 --format-only --eval-options "jsonfile_prefix=./out"
+
+
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 bash tools/dist_test.sh /mmdetection/mmdetection/work_dir/cascade_rcnn_r50_1x_dcn/cascade_rcnn_r50_fpn_dconv_c3-c5_1x_voc.py     /mmdetection/mmdetection/work_dir/cascade_rcnn_r50_1x_dcn/latest.pth 8 --format-only --eval-options "jsonfile_prefix=./out"
+```
+
+
+
+CUDA_VISIBLE_DEVICES=4,5 nohup bash ./tools/dist_train.sh configs/cascade_rcnn/cascade_rcnn_r50_fpn_1x_coco.py 2 --work-dir zzz/coco_cas &> zzz/coco_cas/train_log &
+
+
+
+# 跑代码检查
+
+1. 数据集预处理+加载路径
+2. 模型策略一般不改
+3. 运行时是否有预加载模型load_from
+
+单GPU
+
+```bash
+CUDA_VISIBLE_DEVICES=5 nohup python tools/train.py \
+configs/dcn/cascade_rcnn_r50_fpn_dconv_c3-c5_1x_coco.py \
+--work-dir work/dcn_data_aug \
+&> work/dcn_data_aug/train.log &
+```
+
+多GPU
+
+```bash
+#train
+CUDA_VISIBLE_DEVICES=2,3,4,5,6,7 nohup bash ./tools/dist_train.sh \
+configs/dcn/cascade_rcnn_r50_fpn_dconv_c3-c5_1x_coco.py \
+6 \
+--work-dir work/test1 \
+&> work/test1/train.log &
+
+
+
+# test
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5 nohup bash tools/dist_test.sh \
+/mmdetection/mmdetection/work/dcn_r50_1x_base/cascade_rcnn_r50_fpn_dconv_c3-c5_1x_coco.py \
+/mmdetection/mmdetection/work/dcn_r50_1x_base/latest.pth \
+6 \
+--format-only \
+--eval-options "jsonfile_prefix=./dcn_r50_1x_base" \
+&> work/dcn_r50_1x_base/test.log &
+
+
+# visualize the results, save images to the directory results/
+python tools/analysis_tools/analyze_results.py \
+       configs/xxxxxxx.py \
+       result.pkl \
+       results \
+       --show
+
+
+
+
+```
+
+# coco
+
+基本：
+
+```bash
+CUDA_VISIBLE_DEVICES=2,3 nohup bash ./tools/dist_train.sh \
+configs/dcn/cascade_rcnn_r50_fpn_dconv_c3-c5_1x_coco.py \
+2 \
+--work-dir work/dcn_r50_1x_base \
+&> work/dcn_r50_1x_base/train.log &
+```
+
+```bash
+# test下生成json结果
+# CUDA_VISIBLE_DEVICES=0,1,2,3,4,5 bash tools/dist_test.sh /mmdetection/mmdetection/work/dcn_r50_1x_base/cascade_rcnn_r50_fpn_dconv_c3-c5_1x_coco.py /mmdetection/mmdetection/work/dcn_r50_1x_base/latest.pth 6 --out work/dcn_r50_1x_base/val_out/result.pkl   --format-only--options "jsonfile_prefix=./dcn_r50_1x_base"
+
+# 改test为val，生成val的json和pkl
+# CUDA_VISIBLE_DEVICES=1,3 bash tools/dist_test.sh /mmdetection/mmdetection/work/dcn_r50_1x_base/cascade_rcnn_r50_fpn_dconv_c3-c5_1x_coco.py /mmdetection/mmdetection/work/dcn_r50_1x_base/latest.pth 2 --out work/dcn_r50_1x_base/val_out/result.pkl   --format-only  --options "jsonfile_prefix=work/dcn_r50_1x_base/val_out/val_out"
+
+# 错误分析
+# python tools/analysis_tools/coco_error_analysis.py \
+#        work/dcn_r50_1x_base/val_out/val_out.bbox.json \
+#        zzz/error \
+#        --ann /mmdetection/mmdetection/data/food_60/annotations/val.json \
+
+nohup python tools/analysis_tools/analyze_results.py work/dcn_r50_1x_base/cascade_rcnn_r50_fpn_dconv_c3-c5_1x_coco.py work/dcn_r50_1x_base/val_out/result.pkl work/dcn_r50_1x_base/analyze_results/ --show --topk 50 &> nohup.out &
+# 不太能用good全是置信度很低的。。。
+
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5 nohup bash tools/dist_test.sh \
+/mmdetection/mmdetection/work/dcn_r50_1x_base/cascade_rcnn_r50_fpn_dconv_c3-c5_1x_coco.py \
+/mmdetection/mmdetection/work/dcn_r50_1x_base/latest.pth \
+6 \
+--out work/dcn_r50_1x_base/result.pkl  --eval bbox \
+&> work/dcn_r50_1x_base/result.log &
+
+
+
+```
+
+
+
+基本+data_aug：修改数据增强代码
+
+```bash
+CUDA_VISIBLE_DEVICES=6,7 nohup bash ./tools/dist_train.sh \
+configs/dcn/cascade_rcnn_r50_fpn_dconv_c3-c5_1x_coco.py \
+2 \
+--work-dir work/dcn_r50_1x_dataAug \
+&> work/dcn_r50_1x_dataAug/train.log &
+```
+
+基本+data_aug+pretrain：修改数据增强代码+修改load_from dcnr50
+
+```bash
+CUDA_VISIBLE_DEVICES=4,5 nohup bash ./tools/dist_train.sh \
+configs/dcn/cascade_rcnn_r50_fpn_dconv_c3-c5_1x_coco.py \
+2 \
+--work-dir work/dcn_r50_1x_dataAug+pretrain \
+&> work/dcn_r50_1x_dataAug+pretrain/train.log &
+```
+
+基本+data_aug+pretrain+r101
+
+```bash
+CUDA_VISIBLE_DEVICES=6,7 nohup bash ./tools/dist_train.sh \
+configs/dcn/cascade_rcnn_r101_fpn_dconv_c3-c5_1x_coco.py \
+2 \
+--work-dir work/dcn_r101_1x_dataAug+pretrain \
+&> work/dcn_r101_1x_dataAug+pretrain/train.log &
+```
+
+基本+data_aug+pretrain+r101+20e
+
+```bash
+CUDA_VISIBLE_DEVICES=4,5,6,7 nohup bash ./tools/dist_train.sh \
+configs/dcn/cascade_rcnn_r101_fpn_dconv_c3-c5_20e_coco.py \
+4 \
+--work-dir work/dcn_r101_20e_dataAug+pretrain \
+&> work/dcn_r101_20e_dataAug+pretrain/train.log &
+```
+
+基本+data_aug2：修改数据增强代码
+
+```bash
+CUDA_VISIBLE_DEVICES=5,6,7 nohup bash ./tools/dist_train.sh \
+configs/dcn/cascade_rcnn_r50_fpn_dconv_c3-c5_1x_coco.py \
+3 \
+--work-dir work/dcn_r50_1x_dataAug2 \
+&> work/dcn_r50_1x_dataAug2/train.log &
+```
+
+基本+data_aug3：修改数据增强代码
+
+```bash
+CUDA_VISIBLE_DEVICES=4,5,6,7 nohup bash ./tools/dist_train.sh \
+configs/dcn/cascade_rcnn_r50_fpn_dconv_c3-c5_1x_coco.py \
+4 \
+--work-dir work/dcn_r50_1x_dataAug3 \
+&> work/dcn_r50_1x_dataAug3/train.log &
+
+```
+
+## 消融实验
+
+### 去掉DCN：（fpn+soft-nms）
+
+```bash
+CUDA_VISIBLE_DEVICES=4,5,6,7 nohup bash ./tools/dist_train.sh \
+configs/cascade_rcnn/cascade_rcnn_r50_fpn_1x_coco.py \
+4 \
+--work-dir work/cascade_r50_fpn_1x \
+&> work/cascade_r50_fpn_1x/train.log &
+```
+
+### fpn+DCN
+
+修改soft nms配置为nms：
+
+```bash
+CUDA_VISIBLE_DEVICES=6,7 nohup bash ./tools/dist_train.sh \
+configs/dcn/cascade_rcnn_r50_fpn_dconv_c3-c5_1x_coco.py \
+2 \
+--work-dir work/fpn+dcn \
+&> work/fpn+dcn/train.log &
+```
+
+
+
+### 去掉soft-nms：（fpn）
+
+修改soft nms配置为nms：
+
+```bash
+CUDA_VISIBLE_DEVICES=4,5 nohup bash ./tools/dist_train.sh \
+configs/cascade_rcnn/cascade_rcnn_r50_fpn_1x_coco.py \
+2 \
+--work-dir work/fpn \
+&> work/fpn/train.log &
+```
+
+
+
+### 去掉fpn(二阶段不能去掉，试试faster？)
+
+
+
+
+
+## 对比实验
+
+faster
+
+```bash
+CUDA_VISIBLE_DEVICES=6,7 nohup bash ./tools/dist_train.sh \
+configs/faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py \
+2 \
+--work-dir work/faster \
+&> work/faster/train.log &
+```
+
+retinanet
+
+```bash
+CUDA_VISIBLE_DEVICES=4,7 nohup bash ./tools/dist_train.sh \
+configs/retinanet/retinanet_r50_fpn_1x_coco.py \
+2 \
+--work-dir work/retinanet \
+&> work/retinanet/train.log &
+```
+
+retinanet+dataAug【2021年10月25日】
+
+```bash
+CUDA_VISIBLE_DEVICES=4,7 nohup bash ./tools/dist_train.sh \
+configs/retinanet/retinanet_r50_fpn_1x_coco.py \
+2 \
+--work-dir work/retinanet \
+&> work/retinanet/train.log &
+```
+
+faster+dataAug
+
+```bash
+```
+
+cascade+dataAug
+
+
+
+# 常用工具
+
+## test生成标注信息
+
+p.s.测试只能单GPU才能运行，不知道为啥。。
+
+```bash
+CUDA_VISIBLE_DEVICES=3 python tools/test.py work/dcn_r50_1x_base/cascade_rcnn_r50_fpn_dconv_c3-c5_1x_coco.py work/dcn_r50_1x_base/latest.pth --show-dir work/dcn_r50_1x_base/show_test/ --show-score-thr 0.6
+```
+
+生成一部分的话，直接中途强制中断就行
+
+## 生成json结果文件
+
+```bash
+CUDA_VISIBLE_DEVICES=3,4,5 bash tools/dist_test.sh \
+work/dcn_r50_1x_dataAug+pretrain/cascade_rcnn_r50_fpn_dconv_c3-c5_1x_coco.py \
+work/dcn_r50_1x_dataAug+pretrain/latest.pth \
+3 \
+--format-only \
+--eval-options "jsonfile_prefix=work/dcn_r50_1x_dataAug+pretrain/dcn_r50_1x_dataAug+pretrain" \
+```
+
+这个文件即使设置了show-score-thr里很多低分的也筛选进来了，需要在输出csv中设置阈值
+
+## 生成excel结果文件
+
+需要先生成
+
+```bash
+python tools/post_process/json2submit.py --test_json work/dcn_r50_1x_dataAug+pretrain/dcn_r50_1x_dataAug+pretrain.bbox.json --submit_file dcn_r50_1x_dataAug+pretrain.csv --score 0.6
+```
+
+
+
+## 生成val的pkl结果
+
+先讲配置文件的test改成val（==两处==）
+
+```bash
+```
+
+## 绘制多个模型训练的mAP趋势
+
+```bash
+# 综合分析
+python tools/analysis_tools/analyze_logs.py plot_curve work/dcn_r50_1x_base/20210921_004654.log.json work/dcn_r50_1x_dataAug/20210921_004758.log.json work/dcn_r50_1x_dataAug+pretrain/20210921_011221.log.json --keys bbox_mAP --legend base aug aug+pre --out aa.pdf
+```
+
